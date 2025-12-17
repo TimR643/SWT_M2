@@ -6,6 +6,7 @@ import string
 import subprocess
 
 import rclpy
+from action_msgs.msg import GoalStatus
 from ament_index_python.packages import get_package_share_directory
 from geometry_msgs.msg import Pose, PoseStamped, Twist
 from irobot_create_msgs.action import Dock, Undock
@@ -28,6 +29,7 @@ from sopias4_msgs.msg import Robot, RobotStates
 from sopias4_msgs.srv import (
     Drive,
     DriveToPos,
+    DriveWaypointList,
     EmptyWithStatuscode,
     LaunchNav2Stack,
     RegistryService,
@@ -56,7 +58,6 @@ class RobotManager(Node):
 
     def __init__(self, node_name="robot_manager", namespace: str | None = None) -> None:
         super().__init__(node_name) if namespace is None else super().__init__(node_name, namespace=namespace)  # type: ignore
-        self.__goal_handle = None
 
         # ------------------- Service server --------------------
         self.drive_to_pos_action: Service = self.create_service(
@@ -64,6 +65,9 @@ class RobotManager(Node):
         )
         self.drive_serive: Service = self.create_service(
             Drive, "drive", self.__drive_callback
+        )
+        self.drive_waypoints_service: Service = self.create_service(
+            DriveWaypointList, "drive_waypoints", self.__drive_waypoints
         )
         self.launch_service: Service = self.create_service(
             LaunchNav2Stack, "launch_nav2_stack", self.__launch_nav_stack
@@ -218,34 +222,66 @@ class RobotManager(Node):
         Returns:
             DriveToPos.Response: The statuscode of the operation
         """
-        # Generate action goal
+        if self.__send_navigation_goal(pose.goal):
+            response.statuscode = DriveToPos.Response.SUCCESS
+        else:
+            response.statuscode = DriveToPos.Response.GOAL_REJECTED
+
+        return response
+
+    def __drive_waypoints(
+        self,
+        request_data: DriveWaypointList.Request,
+        response_data: DriveWaypointList.Response,
+    ) -> DriveWaypointList.Response:
+        """
+        Callback for a service that drives through a list of goals sequentially.
+
+        Args:
+            request_data (DriveWaypointList.Request): The request containing all waypoints.
+            response_data (DriveWaypointList.Response): The response that will be filled with the result.
+
+        Returns:
+            DriveWaypointList.Response: Response with status and number of completed goals.
+        """
+
+        completed_goals = 0
+        for goal in request_data.goals:
+            if self.__send_navigation_goal(goal):
+                completed_goals += 1
+                continue
+
+            response_data.statuscode = DriveWaypointList.Response.GOAL_REJECTED
+            response_data.completed_goals = completed_goals
+            return response_data
+
+        response_data.statuscode = DriveWaypointList.Response.SUCCESS
+        response_data.completed_goals = completed_goals
+        return response_data
+
+    def __send_navigation_goal(self, goal: PoseStamped) -> bool:
         goal_msg = NavigateToPose.Goal()
-        goal_msg.pose = pose.goal
+        goal_msg.pose = goal
         goal_msg.behavior_tree = ""
 
-        # Wait until action server is up
         while not self.__nav2_aclient_driveToPos.wait_for_server(timeout_sec=1.0):
             self.get_logger().debug(" Waiting for nav2 action server startup...")
-            pass
 
-        # Send action goal to action server
         send_goal_future = self.__nav2_aclient_driveToPos.send_goal_async(
             goal_msg, self._feedbackCallback
         )
 
-        # Wait until the goal is either accepted or rejected
         rclpy.spin_until_future_complete(self, send_goal_future, timeout_sec=5)
-        self.__goal_handle = send_goal_future.result()
+        goal_handle = send_goal_future.result()
 
-        # Check if goal was accepted and setting statuscode for response
-        if not self.__goal_handle.accepted:  # type: ignore
-            response.statuscode = DriveToPos.Response.GOAL_REJECTED
-            return response
+        if goal_handle is None or not goal_handle.accepted:
+            return False
 
-        self.__result_future = self.__goal_handle.get_result_async()  # type: ignore
-        response.statuscode = DriveToPos.Response.SUCCESS
+        result_future = goal_handle.get_result_async()
+        rclpy.spin_until_future_complete(self, result_future)
+        result = result_future.result()
 
-        return response
+        return result is not None and result.status == GoalStatus.STATUS_SUCCEEDED
 
     def _feedbackCallback(self, msg: NavigateToPose.Feedback) -> None:
         """

@@ -1,0 +1,14 @@
+# Request
+# Ordered list of waypoints the robot should follow.
+geometry_msgs/PoseStamped[] goals
+---
+# Response
+string SUCCESS = "success"
+string UNKNOWN_ERROR = "unknown_error"
+string GOAL_REJECTED = "goal_rejected"
+
+# Number of goals that were completed successfully.
+uint32 completed_goals
+
+# Statuscode of the request
+string statuscode "unknown_error"

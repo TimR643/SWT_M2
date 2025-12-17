@@ -36,6 +36,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
       "srv/DriveToPos.srv"
       "srv/LaunchNav2Stack.srv"
       "srv/Drive.srv"
+      "srv/DriveWaypointList.srv"
       "srv/StopMapping.srv"
       # Plugin Bridges
       "srv/CreatePlan.srv"
