@@ -14,6 +14,7 @@ from sopias4_framework.nodes.planner_pyplugin import PlannerPyPlugin
 from sopias4_framework.tools.ros2 import costmap_tools
 from sopias4_framework.tools.ros2.costmap_tools import LETHAL_COST
 
+from sopias4_msgs.msg import RobotStates
 from sopias4_msgs.srv import CreatePlan
 
 
@@ -25,6 +26,7 @@ class Astar(PlannerPyPlugin):
     collision_penalty_seconds: float
     schnitzeljagd_average_speed: float
     replan_overhead_seconds: float
+    opponent_robot_namespace: str | None
 
     def __init__(self, namespace: str | None = None) -> None:
         (
@@ -55,6 +57,10 @@ class Astar(PlannerPyPlugin):
         self.replan_overhead_seconds = self.declare_parameter(
             "replan_overhead_seconds", 0.5
         ).value
+        self.opponent_robot_namespace = None
+        self.create_subscription(
+            RobotStates, "/robot_states", self.robot_states_callback, 10
+        )
 
     def generate_path(
         self,
@@ -252,6 +258,25 @@ class Astar(PlannerPyPlugin):
 
         path.append(goal)
         return path
+
+    def robot_states_callback(self, msg: RobotStates) -> None:
+        """Enable Schnitzeljagd mode automatically when robot 3 is the opponent."""
+
+        own_namespace = self.get_namespace()
+        for robot in msg.robot_states:
+            if robot.name_space == own_namespace:
+                continue
+
+            self.opponent_robot_namespace = robot.name_space
+            opponent_suffix = robot.name_space.rstrip("/").split("/")[-1]
+
+            if opponent_suffix in ("3", "robot3"):
+                if not self.schnitzeljagd_mode:
+                    self.get_logger().info(
+                        "Enabling Schnitzeljagd mode because opponent robot 3 was detected"
+                    )
+                self.schnitzeljagd_mode = True
+            return
 
 
 def main(args=None):
