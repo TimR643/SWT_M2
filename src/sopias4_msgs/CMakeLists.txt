@@ -36,12 +36,19 @@ rosidl_generate_interfaces(${PROJECT_NAME}
       "srv/DriveToPos.srv"
       "srv/LaunchNav2Stack.srv"
       "srv/Drive.srv"
+      "srv/DriveWaypointList.srv"
       "srv/StopMapping.srv"
       # Plugin Bridges
       "srv/CreatePlan.srv"
       "srv/UpdateCosts.srv"
       "srv/ComputeVelocityCommands.srv"
       DEPENDENCIES builtin_interfaces geometry_msgs nav_msgs nav2_msgs
+)
+
+ament_export_dependencies(rosidl_default_runtime geometry_msgs nav_msgs nav2_msgs)
+
+install(DIRECTORY msg srv
+        DESTINATION share/${PROJECT_NAME}
 )
 
 if(BUILD_TESTING)

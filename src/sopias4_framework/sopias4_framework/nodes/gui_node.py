@@ -8,7 +8,7 @@ import time
 from threading import Thread
 
 import rclpy
-from geometry_msgs.msg import Twist
+from geometry_msgs.msg import PoseStamped, Twist
 from PyQt5.QtCore import pyqtSignal
 from PyQt5.QtWidgets import QFileDialog, QMainWindow, QMessageBox
 from rclpy.client import Client
@@ -21,6 +21,7 @@ from sopias4_msgs.srv import (
     Drive,
     EmptyWithStatuscode,
     LaunchNav2Stack,
+    DriveWaypointList,
     RegistryService,
     ShowDialog,
     StopMapping,
@@ -541,6 +542,24 @@ class GUINode(QMainWindow):
             )
             raise e
 
+    def drive_waypoints(self, goals: list[PoseStamped]) -> DriveWaypointList.Response | None:
+        """Drive through a list of goals sequentially.
+
+        Args:
+            goals (list[PoseStamped]): Ordered list of navigation targets.
+
+        Returns:
+            DriveWaypointList.Response | None: The service response if available.
+        """
+
+        try:
+            return self.node._drive_waypoints(goals)
+        except Exception as e:
+            self.node.get_logger().error(
+                f"Couldnt send waypoint list to Turtlebot: {e}"
+            )
+            raise e
+
     def display_dialog(self, request_data: ShowDialog.Request):
         """
         :meta private:
@@ -773,6 +792,9 @@ class GrapficalNode(Node):
         # This service sends a manual drive command to the robot
         self.__rm_sclient_drive: Client = self.service_client_node.create_client(
             Drive, f"{self.get_namespace()}/drive"
+        )
+        self.__rm_sclient_drive_waypoints: Client = self.service_client_node.create_client(
+            DriveWaypointList, f"{self.get_namespace()}/drive_waypoints"
         )
 
         # This service lets the tutlebot dock to its charging station
@@ -1066,6 +1088,21 @@ class GrapficalNode(Node):
             return True
         else:
             return False
+
+    def _drive_waypoints(
+        self, goals: list[PoseStamped]
+    ) -> DriveWaypointList.Response | None:
+        """Send a list of waypoints that should be driven sequentially."""
+
+        request = DriveWaypointList.Request()
+        request.goals = goals
+
+        return node_tools.call_service(
+            client=self.__rm_sclient_drive_waypoints,
+            service_req=request,
+            calling_node=self.service_client_node,
+            timeout_sec=10,
+        )
 
     def _dock(self) -> bool:
         """
