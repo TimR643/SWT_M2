@@ -238,8 +238,8 @@ controller_server:
     FollowPath:
       plugin: "nav2_regulated_pure_pursuit_controller::RegulatedPurePursuitController"
       desired_linear_vel: 0.50          # Max speed (Straight line speed)
-      use_collision_detection: true #tbd
-      max_allowed_time_to_Collision_up_to_carrot: 1.5
+      use_collision_detection: false  #tbd
+      #max_allowed_time_to_Collision_up_to_carrot: 1.5
       lookahead_dist: 0.6
       min_lookahead_dist: 0.3
       max_lookahead_dist: 0.9
@@ -282,8 +282,8 @@ local_costmap:
       plugins: [static_layer, voxel_layer, inflation_layer]
       inflation_layer:
         plugin: nav2_costmap_2d::InflationLayer
-        cost_scaling_factor: 5.5 #initial: 4.0
-        inflation_radius: 0.20 #to be changed (initial  0.2)
+        cost_scaling_factor: 4.0 #initial: 4.0
+        inflation_radius: 0.25 #to be changed (initial  0.2)
       voxel_layer:
         plugin: nav2_costmap_2d::VoxelLayer
         enabled: True
@@ -346,8 +346,8 @@ global_costmap:
         map_topic: /map
       inflation_layer:
         plugin: nav2_costmap_2d::InflationLayer
-        cost_scaling_factor: 4.0
-        inflation_radius: 0.45
+        cost_scaling_factor: 5.0
+        inflation_radius: 0.22
       layer_plugin:
         plugin: plugin_bridges/LayerPlugin
         plugin_name: "layer_plugin"
