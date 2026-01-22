@@ -7,7 +7,6 @@ import time
 from typing import List, Optional
 
 import rclpy
-import tf2_geometry_msgs  # noqa: F401 (required for do_transform_pose)
 from action_msgs.msg import GoalStatus
 from geometry_msgs.msg import PoseStamped
 from nav2_msgs.action import ComputePathThroughPoses, NavigateThroughPoses
@@ -15,7 +14,8 @@ from nav_msgs.msg import Path
 from rclpy.action import ActionClient
 from rclpy.node import Node
 from rclpy.time import Time
-from tf2_ros import Buffer, TransformException, TransformListener
+from tf2_ros import Buffer, TransformListener, TransformException
+import tf2_geometry_msgs  # noqa: F401 (required for do_transform_pose)
 
 
 class SchnitzeljagdRace(Node):
@@ -44,9 +44,7 @@ class SchnitzeljagdRace(Node):
         self._lock = threading.Lock()
         self._processing = False
 
-        self.create_subscription(
-            PoseStamped, self.waypoint_topic, self._waypoint_cb, 10
-        )
+        self.create_subscription(PoseStamped, self.waypoint_topic, self._waypoint_cb, 10)
         self.create_timer(0.2, self._maybe_process)
 
         self.get_logger().info(
