@@ -1,4 +1,4 @@
-"""This file was mainly edited by Nils Gerth, Patrick Henle"""
+
 
 import rclpy
 from sopias4_framework.nodes.layer_pyplugin import *

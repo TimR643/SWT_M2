@@ -1,4 +1,4 @@
-"""This file was mainly edited by Nils Gerth, Torben Müller"""
+
 
 import heapq
 import math
