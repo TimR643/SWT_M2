@@ -73,9 +73,7 @@ class PlannerPlugin(PlannerPyPlugin):
                 return safe_path
 
             self.get_logger().info(
-                "Detour detected (A*: %.2fm vs straight: %.2fm).",
-                safe_dist,
-                euclidean_dist,
+                f"Detour detected (A*: {safe_dist:.2f}m vs straight: {euclidean_dist:.2f}m)."
             )
         else:
             self.get_logger().warn("A* blocked; falling back to safe path.")

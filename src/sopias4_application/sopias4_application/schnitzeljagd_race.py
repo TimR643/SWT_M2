@@ -144,7 +144,7 @@ class SchnitzeljagdRace(Node):
         return result.result.path
 
     def _send_navigation(self, poses: List[PoseStamped]) -> None:
-        while not self.navigate_client.wait_for_server(timeout_sec=1.0):
+        while not self.navigate_client.wait_for_server(timeout_sec=3.0):
             self.get_logger().info(
                 "'navigate_through_poses' action server not available, waiting..."
             )

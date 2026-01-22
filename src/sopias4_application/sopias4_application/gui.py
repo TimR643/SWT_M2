@@ -39,18 +39,7 @@ class GUI(GUINode):
         self.ui: Ui_MainWindow
         super().__init__(Ui_MainWindow())
         self.user_custom_yaml = None
-        self.perform_trick_after_first_goal = False
-        self.config_dir = os.path.join(
-            get_package_share_directory("sopias4_application"), "config"
-        )
-        self.target_yaml_path = os.path.join(self.config_dir, "nav2.yaml")
-        self.default_yaml_path = os.path.join(self.config_dir, "nav2_base.yaml")
-        self.vs_yaml_path = os.path.join(self.config_dir, "nav2_vs.yaml")
-        self.mode_yaml_map = {
-            "Zeitrennen": self.default_yaml_path,
-            "VS-Rennen": self.vs_yaml_path,
-            "Schnitzeljagd": self.default_yaml_path,
-        }
+        self.target_yaml_path = "/home/ws/install/sopias4_application/share/sopias4_application/config/nav2.yaml"
 
     def namespace_register(self):
         self.namespace = self.ui.comboBox_ownRobi.currentText()
@@ -157,9 +146,6 @@ class GUI(GUINode):
 
     def connect_ui_callbacks(self):
         self.ui.comboBox_ownRobi.currentIndexChanged.connect(self.namespace_register)
-        self.ui.comboBox_mode_select.currentIndexChanged.connect(
-            lambda: self.apply_mode_selection(self.ui.comboBox_mode_select.currentText())
-        )
         self.ui.start_pushButton.pressed.connect(self.start_stopp)
         self.ui.pushButton_right.pressed.connect(
             lambda: Thread(
@@ -213,12 +199,6 @@ class GUI(GUINode):
         self.ui.comboBox_ownRobi.addItems(
             ["keine Auswahl", "/turtle1", "/turtle2", "/turtle3", "/turtle4"]
         )
-        self.ui.comboBox_mode_select.clear()
-        self.ui.comboBox_mode_select.addItems(
-            ["Zeitrennen", "VS-Rennen", "Schnitzeljagd"]
-        )
-        self.ui.comboBox_mode_select.setCurrentIndex(0)
-        self.apply_mode_selection(self.ui.comboBox_mode_select.currentText())
 
         self.ui.tabWidget.setTabText(0, "Overview")
         self.ui.tabWidget.setTabText(1, "Logs")
@@ -277,32 +257,6 @@ class GUI(GUINode):
         # We explicitly check the manual box and call the enable function
         self.ui.checkBox_ManualMode.setChecked(True)
         self.elements_enable_while_driving(is_driving=False, is_manual=True)
-
-    def apply_mode_selection(self, mode_name: str) -> None:
-        config_path = self.mode_yaml_map.get(mode_name)
-        if config_path is None:
-            self.ui.error_textBrowser.append(f"Unbekannter Modus: {mode_name}")
-            return
-        if not os.path.exists(config_path):
-            self.ui.error_textBrowser.append(
-                f"Modus-Config nicht gefunden: {config_path}"
-            )
-            return
-        try:
-            shutil.copyfile(config_path, self.target_yaml_path)
-        except Exception as exc:
-            self.ui.error_textBrowser.append(
-                f"Config konnte nicht geladen werden: {exc}"
-            )
-            return
-        self.perform_trick_after_first_goal = mode_name == "Schnitzeljagd"
-        if self.perform_trick_after_first_goal:
-            self.ui.error_textBrowser.append(
-                "Schnitzeljagd aktiv: Kunststück nach erstem Zielpunkt vorgesehen."
-            )
-        self.ui.error_textBrowser.append(
-            f"Modus gesetzt: {mode_name} (Config: {os.path.basename(config_path)})"
-        )
 
     # def upload_yaml(self):
     #     # Öffnet den Datei-Dialog
