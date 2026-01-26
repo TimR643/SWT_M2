@@ -237,32 +237,32 @@ controller_server:
     # Switched from TEB/Shim to Regulated Pure Pursuit
     FollowPath:
       plugin: "nav2_regulated_pure_pursuit_controller::RegulatedPurePursuitController"
-      desired_linear_vel: 0.35          # Max speed (Straight line speed)
-      use_collision_detection: true  #tbd
+      desired_linear_vel: 0.50          # Max speed (Straight line speed)
+      use_collision_detection: false  #would make sense to active it and adjust the radius even more
       #max_allowed_time_to_Collision_up_to_carrot: 1.5
-      lookahead_dist: 0.5
-      min_lookahead_dist: 0.25
-      max_lookahead_dist: 0.8
+      lookahead_dist: 0.6
+      min_lookahead_dist: 0.3
+      max_lookahead_dist: 0.9
       lookahead_time: 1.5
       rotate_to_heading_angular_vel: 1.8
       transform_tolerance: 0.1
       use_velocity_scaled_lookahead_dist: true
-      min_approach_linear_velocity: 0.03
+      min_approach_linear_velocity: 0.05
       approach_velocity_scaling_dist: 0.6
       
       # !!! THE CRITICAL SECTION FOR CURVES !!!
       use_regulated_linear_velocity_scaling: true
-      regulated_linear_scaling_min_radius: 1.1  # If curve radius < 1.1m, start slowing down
-      regulated_linear_scaling_min_speed: 0.20  # Never go slower than 0.20m/s in curves (unless stopping)
+      regulated_linear_scaling_min_radius: 0.9  # If curve radius < 0.9m, start slowing down
+      regulated_linear_scaling_min_speed: 0.25  # Never go slower than 0.25m/s in curves (unless stopping)
       
       use_cost_regulated_linear_velocity_scaling: false # Slow down if near walls/obstacles
-      cost_scaling_dist: 0.7
-      cost_scaling_gain: 1.2
-      inflation_cost_scaling_factor: 3.5
+      cost_scaling_dist: 0.6
+      cost_scaling_gain: 1.0
+      inflation_cost_scaling_factor: 3.0
       
       use_rotate_to_heading: true       # Replaces the functionality of your previous "RotationShim"
       rotate_to_heading_min_angle: 0.785
-      max_angular_accel: 2.4
+      max_angular_accel: 3.2
       max_robot_pose_search_dist: 10.0
       use_interpolation: true      
 
@@ -283,7 +283,7 @@ local_costmap:
       inflation_layer:
         plugin: nav2_costmap_2d::InflationLayer
         cost_scaling_factor: 4.5 #initial: 4.0
-        inflation_radius: 0.3 #to be changed (initial  0.2)
+        inflation_radius: 0.2 #to be changed (initial  0.2)
       voxel_layer:
         plugin: nav2_costmap_2d::VoxelLayer
         enabled: True
@@ -346,8 +346,8 @@ global_costmap:
         map_topic: /map
       inflation_layer:
         plugin: nav2_costmap_2d::InflationLayer
-        cost_scaling_factor: 5.5
-        inflation_radius: 0.3
+        cost_scaling_factor: 5.0
+        inflation_radius: 0.22
       layer_plugin:
         plugin: plugin_bridges/LayerPlugin
         plugin_name: "layer_plugin"
@@ -420,10 +420,10 @@ velocity_smoother:
     smoothing_frequency: 20.0
     scale_velocities: False
     feedback: OPEN_LOOP
-    max_velocity: [0.2, 0.0, 0.8]
-    min_velocity: [-0.2, 0.0, -0.8]
-    max_accel: [2.0, 0.0, 2.4]
-    max_decel: [-2.0, 0.0, -2.4]
+    max_velocity: [0.26, 0.0, 1.0]
+    min_velocity: [-0.26, 0.0, -1.0]
+    max_accel: [2.5, 0.0, 3.2]
+    max_decel: [-2.5, 0.0, -3.2]
     odom_topic: odom
     odom_duration: 0.1
     deadband_velocity: [0.0, 0.0, 0.0]
