@@ -23,6 +23,7 @@ from slam_toolbox import srv as slam_toolbox_srv
 from sopias4_framework.tools.ros2 import node_tools, yaml_tools
 from std_msgs.msg import Bool
 from std_srvs.srv import Empty
+from sensor_msgs.msg import BatteryState #for safety feature if battery is too low
 
 from sopias4_msgs.msg import Robot, RobotStates
 from sopias4_msgs.srv import (
@@ -54,9 +55,13 @@ class RobotManager(Node):
         undock_service (Service): A service to let the turtlebot dock from its charging station. The service can be accessed via the service "/<namespace>/undock"
     """
 
+    MIN_BATTERY_PERCENTAGE = 0.03 #set min percentage 
+
     def __init__(self, node_name="robot_manager", namespace: str | None = None) -> None:
         super().__init__(node_name) if namespace is None else super().__init__(node_name, namespace=namespace)  # type: ignore
         self.__goal_handle = None
+        self.__battery_percentage: float | None = None
+        self.__battery_is_low_state = False
 
         # ------------------- Service server --------------------
         self.drive_to_pos_action: Service = self.create_service(
@@ -170,6 +175,13 @@ class RobotManager(Node):
             if self.get_namespace() != "/"
             else self.create_publisher(Bool, "/is_navigating", 10)
         )
+
+        self.__battery_low_pub = (  #bool variable beeing published to eanble a red light in gui if battery is low
+            self.create_publisher(Bool, f"{self.get_namespace()}/battery_low", 10)
+            if self.get_namespace() != "/"
+            else self.create_publisher(Bool, "/battery_low", 10)
+        )
+
         self.__sub_robot_states = self.create_subscription(
             RobotStates,
             "/robot_states",
@@ -179,6 +191,13 @@ class RobotManager(Node):
                 durability=QoSDurabilityPolicy.VOLATILE,
                 depth=5,
             ),
+        )
+
+        self.__battery_state_sub = self.create_subscription(
+            BatteryState,
+            self.__battery_topic(),
+            self.__battery_callback,
+            10,
         )
 
         # ---------- Launch services to run nodes ----------
@@ -218,6 +237,28 @@ class RobotManager(Node):
         Returns:
             DriveToPos.Response: The statuscode of the operation
         """
+
+# safety feature, blocking the robots action and resulting in a log if battery is below min level
+        if self.__battery_is_low():
+            self.get_logger().warning(
+                "Navigation request rejected: battery below minimum threshold."
+            )
+            dialog_request = ShowDialog.Request()
+            dialog_request.title = "Battery too low"
+            dialog_request.content = (
+                "Battery below 3%. Navigation blocked to prevent shutdown."
+            )
+            dialog_request.icon = ShowDialog.Request.ICON_WARN
+            dialog_request.interaction_options = ShowDialog.Request.CONFIRM
+            node_tools.call_service(
+                client=self.__gui_sclient_showDialog,
+                service_req=dialog_request,
+                calling_node=self.__service_client_node,
+                timeout_sec=5,
+            )
+            response.statuscode = DriveToPos.Response.GOAL_REJECTED
+            return response
+
         # Generate action goal
         goal_msg = NavigateToPose.Goal()
         goal_msg.pose = pose.goal
@@ -252,6 +293,33 @@ class RobotManager(Node):
         Feedback callback for the nav2 action client. Currently unused
         """
         pass
+
+# definition for topic subsription and callback 
+    def __battery_topic(self) -> str:
+        if self.get_namespace() == "/":
+            return "/battery_state"
+        return f"{self.get_namespace()}/battery_state"
+
+    def __battery_callback(self, msg: BatteryState) -> None:
+        if msg.percentage < 0.0:
+            return
+        self.__battery_percentage = msg.percentage
+        is_low = self.__battery_is_low()
+        if is_low and not self.__battery_is_low_state:
+            self.get_logger().warning(
+                "Battery below minimum threshold: %.1f%%",
+                self.__battery_percentage * 100.0,
+            )
+        self.__battery_is_low_state = is_low
+        battery_low_msg = Bool()
+        battery_low_msg.data = is_low
+        self.__battery_low_pub.publish(battery_low_msg)
+
+    def __battery_is_low(self) -> bool:
+        if self.__battery_percentage is None:
+            return False
+        return self.__battery_percentage < self.MIN_BATTERY_PERCENTAGE
+
 
     def __drive_callback(
         self, request_data: Drive.Request, response_data: Drive.Response
