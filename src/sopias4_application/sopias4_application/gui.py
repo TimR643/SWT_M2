@@ -37,17 +37,25 @@ class GUI(GUINode):
 
     def __init__(self) -> None:
         self.ui: Ui_MainWindow
-        super().__init__(Ui_MainWindow())
         self.user_custom_yaml = None
-        self.target_yaml_path = "/home/ws/install/sopias4_application/share/sopias4_application/config/nav2.yaml"
+        self.perform_trick_after_first_goal = False
+        self.config_dir = os.path.join(
+            get_package_share_directory("sopias4_application"), "config"
+        )
+        self.target_yaml_path = os.path.join(self.config_dir, "nav2.yaml")
+        self.default_yaml_path = os.path.join(self.config_dir, "nav2_base.yaml")
+        self.vs_yaml_path = os.path.join(self.config_dir, "nav2_vs.yaml")
+        self.mode_yaml_map = {
+            "Zeitrennen": self.default_yaml_path,
+            "VS-Rennen": self.vs_yaml_path,
+            "Schnitzeljagd": self.default_yaml_path,
+        }
+        super().__init__(Ui_MainWindow())
 
     def namespace_register(self):
         self.namespace = self.ui.comboBox_ownRobi.currentText()
 
     def start_stopp(self):
-        # DEFINE PATH TO YOUR DOCKER FILE HERE
-        docker_compose_file = "/path/to/your/docker-compose.yaml"  # TODO: change path!!
-
         if (
             self.ui.comboBox_ownRobi.currentIndex() > 0
             and not self.started
@@ -63,7 +71,7 @@ class GUI(GUINode):
             ############################################
             self.ui.comboBox_ownRobi.setEnabled(False)
             # Lock the checkbox so user can't uncheck it while driving
-            self.ui.spoofing_checkBox.setEnabled(False)
+            # self.ui.spoofing_checkBox.setEnabled(False)
             self.ui.start_pushButton.setText("Stop/aborted")
 
             if not self.ui.checkBox_ManualMode.isChecked():
@@ -79,33 +87,33 @@ class GUI(GUINode):
             self.ui.error_textBrowser.setText("Started...")
 
             # --- DOCKER START LOGIC ---
-            if self.ui.spoofing_checkBox.isChecked():
-                try:
-                    self.ui.error_textBrowser.append("Starting Docker Spoofing...")
-                    # Using Popen prevents the GUI from freezing
-                    subprocess.Popen(
-                        ["docker", "compose", "-f", docker_compose_file, "up", "-d"],
-                        stdout=subprocess.PIPE,
-                        stderr=subprocess.PIPE,
-                    )
-                except Exception as e:
-                    self.ui.error_textBrowser.append(f"Docker Start Error: {e}")
+            # if self.ui.spoofing_checkBox.isChecked():
+            #     try:
+            #         self.ui.error_textBrowser.append("Starting Docker Spoofing...")
+            #         # Using Popen prevents the GUI from freezing
+            #         subprocess.Popen(
+            #             ["docker", "compose", "-f", docker_compose_file, "up", "-d"],
+            #             stdout=subprocess.PIPE,
+            #             stderr=subprocess.PIPE,
+            #         )
+            #     except Exception as e:
+            #         self.ui.error_textBrowser.append(f"Docker Start Error: {e}")
 
         elif self.ui.comboBox_ownRobi.currentIndex() == 0 and not self.started:
             self.ui.error_textBrowser.setText("Please choose your robot")
         else:
             # --- DOCKER STOP LOGIC ---
             # We check if it was checked before stopping everything
-            if self.ui.spoofing_checkBox.isChecked():
-                try:
-                    self.ui.error_textBrowser.append("Stopping Docker Spoofing...")
-                    subprocess.Popen(
-                        ["docker", "compose", "-f", docker_compose_file, "down"],
-                        stdout=subprocess.PIPE,
-                        stderr=subprocess.PIPE,
-                    )
-                except Exception as e:
-                    self.ui.error_textBrowser.append(f"Docker Stop Error: {e}")
+            # if self.ui.spoofing_checkBox.isChecked():
+            #     try:
+            #         self.ui.error_textBrowser.append("Stopping Docker Spoofing...")
+            #         subprocess.Popen(
+            #             ["docker", "compose", "-f", docker_compose_file, "down"],
+            #             stdout=subprocess.PIPE,
+            #             stderr=subprocess.PIPE,
+            #         )
+            #     except Exception as e:
+            #         self.ui.error_textBrowser.append(f"Docker Stop Error: {e}")
 
             if not self.ui.checkBox_ManualMode.isChecked():
                 self.stop_nav_stack()
@@ -122,7 +130,7 @@ class GUI(GUINode):
 
             # Re-enable UI elements
             self.ui.comboBox_ownRobi.setEnabled(True)
-            self.ui.spoofing_checkBox.setEnabled(True)
+            # self.ui.spoofing_checkBox.setEnabled(True)
 
             self.ui.start_pushButton.setText("Start")
             self.ui.error_textBrowser.clear()
@@ -146,6 +154,9 @@ class GUI(GUINode):
 
     def connect_ui_callbacks(self):
         self.ui.comboBox_ownRobi.currentIndexChanged.connect(self.namespace_register)
+        self.ui.comboBox_mode_select.currentIndexChanged.connect(
+            lambda: self.apply_mode_selection(self.ui.comboBox_mode_select.currentText())
+        )
         self.ui.start_pushButton.pressed.connect(self.start_stopp)
         self.ui.pushButton_right.pressed.connect(
             lambda: Thread(
@@ -199,6 +210,12 @@ class GUI(GUINode):
         self.ui.comboBox_ownRobi.addItems(
             ["keine Auswahl", "/turtle1", "/turtle2", "/turtle3", "/turtle4"]
         )
+        self.ui.comboBox_mode_select.clear()
+        self.ui.comboBox_mode_select.addItems(
+            ["Zeitrennen", "VS-Rennen", "Schnitzeljagd"]
+        )
+        self.ui.comboBox_mode_select.setCurrentIndex(0)
+        self.apply_mode_selection(self.ui.comboBox_mode_select.currentText())
 
         self.ui.tabWidget.setTabText(0, "Overview")
         self.ui.tabWidget.setTabText(1, "Logs")
@@ -251,12 +268,38 @@ class GUI(GUINode):
 
         self.ui.start_pushButton.setText("Start")
         self.ui.comboBox_ownRobi.setEnabled(True)
-        self.ui.spoofing_checkBox.setEnabled(True)
+        # self.ui.spoofing_checkBox.setEnabled(True)
 
         # 5. Enable Manual Controls for Recovery
         # We explicitly check the manual box and call the enable function
         self.ui.checkBox_ManualMode.setChecked(True)
         self.elements_enable_while_driving(is_driving=False, is_manual=True)
+
+    def apply_mode_selection(self, mode_name: str) -> None:
+        config_path = self.mode_yaml_map.get(mode_name)
+        if config_path is None:
+            self.ui.error_textBrowser.append(f"Unbekannter Modus: {mode_name}")
+            return
+        if not os.path.exists(config_path):
+            self.ui.error_textBrowser.append(
+                f"Modus-Config nicht gefunden: {config_path}"
+            )
+            return
+        try:
+            shutil.copyfile(config_path, self.target_yaml_path)
+        except Exception as exc:
+            self.ui.error_textBrowser.append(
+                f"Config konnte nicht geladen werden: {exc}"
+            )
+            return
+        self.perform_trick_after_first_goal = mode_name == "Schnitzeljagd"
+        if self.perform_trick_after_first_goal:
+            self.ui.error_textBrowser.append(
+                "Schnitzeljagd aktiv: Kunststück nach erstem Zielpunkt vorgesehen."
+            )
+        self.ui.error_textBrowser.append(
+            f"Modus gesetzt: {mode_name} (Config: {os.path.basename(config_path)})"
+        )
 
     # def upload_yaml(self):
     #     # Öffnet den Datei-Dialog

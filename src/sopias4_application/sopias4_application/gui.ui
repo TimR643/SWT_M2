@@ -115,7 +115,7 @@ li.checked::marker { content: &quot;\2612&quot;; }
        <string>Teleoperation</string>
       </property>
      </widget>
-     <widget class="QCheckBox" name="spoofing_checkBox">
+     <!-- <widget class="QCheckBox" name="spoofing_checkBox">
       <property name="geometry">
        <rect>
         <x>590</x>
@@ -127,7 +127,7 @@ li.checked::marker { content: &quot;\2612&quot;; }
       <property name="text">
        <string>Spoofing</string>
       </property>
-     </widget>
+     </widget> -->
     </widget>
     <widget class="QWidget" name="tab_2">
      <attribute name="title">
