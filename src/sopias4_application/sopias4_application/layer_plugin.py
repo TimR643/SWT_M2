@@ -56,7 +56,7 @@ class LayerPlugin(LayerPyPlugin):
         # Set cost of all pixels in costmap to zero, because only the costs calculated by this layer should be included in the map.
         # In the plugin bridge, all layers get combined so the cleared data doesn't get lost if it is up to date
         costmap.costmap.fill(self.COST_FREE_SPACE)
-        # TODO: Look into if this makes sense
+
         x, y = costmap_tools.pose_2_costmap(self.opponent_robot.pose.pose.pose, costmap)
 
         self.set_circle_cost(

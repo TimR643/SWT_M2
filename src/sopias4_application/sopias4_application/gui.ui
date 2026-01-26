@@ -1,0 +1,671 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>884</width>
+    <height>974</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>MainWindow</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <widget class="QTabWidget" name="tabWidget">
+    <property name="geometry">
+     <rect>
+      <x>30</x>
+      <y>20</y>
+      <width>801</width>
+      <height>861</height>
+     </rect>
+    </property>
+    <property name="currentIndex">
+     <number>2</number>
+    </property>
+    <widget class="QWidget" name="tab">
+     <attribute name="title">
+      <string>Robot</string>
+     </attribute>
+     <widget class="QTextBrowser" name="textBrowser_Overview">
+      <property name="geometry">
+       <rect>
+        <x>30</x>
+        <y>20</y>
+        <width>721</width>
+        <height>241</height>
+       </rect>
+      </property>
+      <property name="html">
+       <string>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;meta charset=&quot;utf-8&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+hr { height: 1px; border-width: 0; }
+li.unchecked::marker { content: &quot;\2610&quot;; }
+li.checked::marker { content: &quot;\2612&quot;; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Ubuntu'; font-size:10pt; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p align=&quot;center&quot; style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:'Sans Serif'; font-size:12pt; font-weight:600;&quot;&gt;Robot race Operating Procedures&lt;/span&gt;&lt;/p&gt;
+&lt;p align=&quot;center&quot; style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-family:'Sans Serif'; font-size:12pt; font-weight:600;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:'Sans Serif'; font-size:11pt; font-weight:700;&quot;&gt;1. Robot selection: &lt;/span&gt;&lt;span style=&quot; font-family:'Sans Serif'; font-size:11pt;&quot;&gt;Select the designated robot unit (Group 2 is 'Turtle 2').&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:'Sans Serif'; font-size:11pt; font-weight:700;&quot;&gt;2. Opponent Selection: &lt;/span&gt;&lt;span style=&quot; font-family:'Sans Serif'; font-size:11pt;&quot;&gt;Designate the opposing unit.&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:'Sans Serif'; font-size:11pt; font-weight:700;&quot;&gt;3. Pose Initialization:&lt;/span&gt;&lt;span style=&quot; font-family:'Sans Serif'; font-size:11pt;&quot;&gt; Current location and orientation visible in RViz 2D Pose Estimation.&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:'Droid Sans Mono','monospace','monospace'; font-size:11pt; font-weight:700; color:#000000;&quot;&gt;4. Target Selection:&lt;/span&gt;&lt;span style=&quot; font-family:'Droid Sans Mono','monospace','monospace'; font-size:11pt; color:#000000;&quot;&gt; Set the destination by using the Nav2 Goal in RViz.&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:'Droid Sans Mono','monospace','monospace'; font-size:11pt; font-weight:700; color:#000000;&quot;&gt;5. Execution.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+      </property>
+     </widget>
+     <widget class="QComboBox" name="comboBox_ownRobi">
+      <property name="geometry">
+       <rect>
+        <x>100</x>
+        <y>530</y>
+        <width>191</width>
+        <height>61</height>
+       </rect>
+      </property>
+     </widget>
+     <widget class="QLabel" name="labelownRobi">
+      <property name="geometry">
+       <rect>
+        <x>100</x>
+        <y>510</y>
+        <width>181</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Robot</string>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="start_pushButton">
+      <property name="geometry">
+       <rect>
+        <x>190</x>
+        <y>660</y>
+        <width>381</width>
+        <height>161</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Execution</string>
+      </property>
+     </widget>
+     <widget class="QTextBrowser" name="error_textBrowser">
+      <property name="geometry">
+       <rect>
+        <x>50</x>
+        <y>840</y>
+        <width>641</width>
+        <height>51</height>
+       </rect>
+      </property>
+     </widget>
+     <widget class="QCheckBox" name="checkBox_ManualMode">
+      <property name="geometry">
+       <rect>
+        <x>590</x>
+        <y>800</y>
+        <width>121</width>
+        <height>21</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Teleoperation</string>
+      </property>
+     </widget>
+     <!-- <widget class="QCheckBox" name="spoofing_checkBox">
+      <property name="geometry">
+       <rect>
+        <x>590</x>
+        <y>770</y>
+        <width>83</width>
+        <height>21</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Spoofing</string>
+      </property>
+     </widget> -->
+    </widget>
+    <widget class="QWidget" name="tab_2">
+     <attribute name="title">
+      <string>Logs</string>
+     </attribute>
+     <widget class="QTextEdit" name="textEdit_log">
+      <property name="geometry">
+       <rect>
+        <x>20</x>
+        <y>40</y>
+        <width>751</width>
+        <height>851</height>
+       </rect>
+      </property>
+     </widget>
+    </widget>
+    <widget class="QWidget" name="tab_3">
+     <attribute name="title">
+      <string>Control</string>
+     </attribute>
+     <widget class="QFrame" name="frame">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>10</y>
+        <width>651</width>
+        <height>411</height>
+       </rect>
+      </property>
+      <property name="frameShape">
+       <enum>QFrame::StyledPanel</enum>
+      </property>
+      <property name="frameShadow">
+       <enum>QFrame::Raised</enum>
+      </property>
+      <widget class="QLabel" name="manual_control">
+       <property name="geometry">
+        <rect>
+         <x>20</x>
+         <y>10</y>
+         <width>211</width>
+         <height>41</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:18pt; font-weight:700;&quot;&gt;Manual Control&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+       </property>
+      </widget>
+      <widget class="QPushButton" name="pushButton_undock">
+       <property name="geometry">
+        <rect>
+         <x>420</x>
+         <y>10</y>
+         <width>101</width>
+         <height>71</height>
+        </rect>
+       </property>
+       <property name="styleSheet">
+        <string notr="true">QPushButton {
+    /* Base Appearance */
+    background-color: #cccccc; /* Changed to Light Grey */
+    color: #333333; /* Changed text color to dark grey for contrast */
+    border: 1px solid #999999; /* Darker border for definition */
+    border-radius: 4px; 
+    padding: 6px 12px; 
+    
+    /* Font and Symbol Styling */
+    font-family: Arial, sans-serif; 
+    font-size: 12pt; 
+    font-weight: bold;
+}</string>
+       </property>
+       <property name="text">
+        <string>Undock</string>
+       </property>
+      </widget>
+      <widget class="QPushButton" name="pushButton_dock">
+       <property name="geometry">
+        <rect>
+         <x>530</x>
+         <y>10</y>
+         <width>111</width>
+         <height>71</height>
+        </rect>
+       </property>
+       <property name="styleSheet">
+        <string notr="true">QPushButton {
+    /* Base Appearance */
+    background-color: #cccccc; /* Changed to Light Grey */
+    color: #333333; /* Changed text color to dark grey for contrast */
+    border: 1px solid #999999; /* Darker border for definition */
+    border-radius: 4px; 
+    padding: 6px 12px; 
+    
+    /* Font and Symbol Styling */
+    font-family: Arial, sans-serif; 
+    font-size: 12pt; 
+    font-weight: bold;
+}</string>
+       </property>
+       <property name="text">
+        <string>Dock</string>
+       </property>
+      </widget>
+      <widget class="QPushButton" name="pushButton_backw">
+       <property name="geometry">
+        <rect>
+         <x>280</x>
+         <y>230</y>
+         <width>80</width>
+         <height>50</height>
+        </rect>
+       </property>
+       <property name="styleSheet">
+        <string notr="true">QPushButton {
+    /* Base Appearance */
+    background-color: #007bff; /* Standard Blue */
+    color: white; 
+    border: 1px solid #0056b3;
+    border-radius: 4px; /* Slightly rounded corners */
+    padding: 6px 12px; /* Top/Bottom padding, Left/Right padding */
+    
+    /* Font and Symbol Styling */
+    font-family: Arial, sans-serif; /* Ensure a clean font for the arrow symbol */
+    font-size: 12pt; /* Larger size for the arrow symbol */
+    font-weight: bold;
+}
+
+QPushButton:hover {
+    background-color: #0056b3; /* Darker blue on hover */
+    border-color: #004494;
+}
+
+QPushButton:pressed {
+    background-color: #004494; /* Even darker blue when pressed */
+    border-style: inset; /* Simulates a push down effect */
+    padding: 7px 11px 5px 13px; /* Shifts content slightly */
+}
+
+QPushButton:disabled {
+    background-color: #80a0c0;
+    color: #cccccc;
+    border-color: #6080a0;
+}</string>
+       </property>
+       <property name="text">
+        <string>Backw</string>
+       </property>
+      </widget>
+      <widget class="QPushButton" name="pushButton_right">
+       <property name="geometry">
+        <rect>
+         <x>370</x>
+         <y>170</y>
+         <width>80</width>
+         <height>50</height>
+        </rect>
+       </property>
+       <property name="styleSheet">
+        <string notr="true">QPushButton {
+    /* Base Appearance */
+    background-color: #007bff; /* Standard Blue */
+    color: white; 
+    border: 1px solid #0056b3;
+    border-radius: 4px; /* Slightly rounded corners */
+    padding: 6px 12px; /* Top/Bottom padding, Left/Right padding */
+    
+    /* Font and Symbol Styling */
+    font-family: Arial, sans-serif; /* Ensure a clean font for the arrow symbol */
+    font-size: 12pt; /* Larger size for the arrow symbol */
+    font-weight: bold;
+}
+
+QPushButton:hover {
+    background-color: #0056b3; /* Darker blue on hover */
+    border-color: #004494;
+}
+
+QPushButton:pressed {
+    background-color: #004494; /* Even darker blue when pressed */
+    border-style: inset; /* Simulates a push down effect */
+    padding: 7px 11px 5px 13px; /* Shifts content slightly */
+}
+
+QPushButton:disabled {
+    background-color: #80a0c0;
+    color: #cccccc;
+    border-color: #6080a0;
+}</string>
+       </property>
+       <property name="text">
+        <string>Right</string>
+       </property>
+      </widget>
+      <widget class="QPushButton" name="pushButton_stopdrive">
+       <property name="geometry">
+        <rect>
+         <x>280</x>
+         <y>170</y>
+         <width>80</width>
+         <height>50</height>
+        </rect>
+       </property>
+       <property name="styleSheet">
+        <string notr="true">QPushButton {
+    /* Base Appearance */
+    background-color: #007bff; /* Standard Blue */
+    color: white; 
+    border: 1px solid #0056b3;
+    border-radius: 4px; /* Slightly rounded corners */
+    padding: 6px 12px; /* Top/Bottom padding, Left/Right padding */
+    
+    /* Font and Symbol Styling */
+    font-family: Arial, sans-serif; /* Ensure a clean font for the arrow symbol */
+    font-size: 12pt; /* Larger size for the arrow symbol */
+    font-weight: bold;
+}
+
+QPushButton:hover {
+    background-color: #0056b3; /* Darker blue on hover */
+    border-color: #004494;
+}
+
+QPushButton:pressed {
+    background-color: #004494; /* Even darker blue when pressed */
+    border-style: inset; /* Simulates a push down effect */
+    padding: 7px 11px 5px 13px; /* Shifts content slightly */
+}
+
+QPushButton:disabled {
+    background-color: #80a0c0;
+    color: #cccccc;
+    border-color: #6080a0;
+}</string>
+       </property>
+       <property name="text">
+        <string>Stop</string>
+       </property>
+      </widget>
+      <widget class="QPushButton" name="pushButton_left">
+       <property name="geometry">
+        <rect>
+         <x>190</x>
+         <y>170</y>
+         <width>80</width>
+         <height>50</height>
+        </rect>
+       </property>
+       <property name="styleSheet">
+        <string notr="true">QPushButton {
+    /* Base Appearance */
+    background-color: #007bff; /* Standard Blue */
+    color: white; 
+    border: 1px solid #0056b3;
+    border-radius: 4px; /* Slightly rounded corners */
+    padding: 6px 12px; /* Top/Bottom padding, Left/Right padding */
+    
+    /* Font and Symbol Styling */
+    font-family: Arial, sans-serif; /* Ensure a clean font for the arrow symbol */
+    font-size: 12pt; /* Larger size for the arrow symbol */
+    font-weight: bold;
+}
+
+QPushButton:hover {
+    background-color: #0056b3; /* Darker blue on hover */
+    border-color: #004494;
+}
+
+QPushButton:pressed {
+    background-color: #004494; /* Even darker blue when pressed */
+    border-style: inset; /* Simulates a push down effect */
+    padding: 7px 11px 5px 13px; /* Shifts content slightly */
+}
+
+QPushButton:disabled {
+    background-color: #80a0c0;
+    color: #cccccc;
+    border-color: #6080a0;
+}</string>
+       </property>
+       <property name="text">
+        <string>Left</string>
+       </property>
+      </widget>
+      <widget class="QPushButton" name="pushButton_fwd">
+       <property name="geometry">
+        <rect>
+         <x>280</x>
+         <y>110</y>
+         <width>80</width>
+         <height>50</height>
+        </rect>
+       </property>
+       <property name="styleSheet">
+        <string notr="true">QPushButton {
+    /* Base Appearance */
+    background-color: #007bff; /* Standard Blue */
+    color: white; 
+    border: 1px solid #0056b3;
+    border-radius: 4px; /* Slightly rounded corners */
+    padding: 6px 12px; /* Top/Bottom padding, Left/Right padding */
+    
+    /* Font and Symbol Styling */
+    font-family: Arial, sans-serif; /* Ensure a clean font for the arrow symbol */
+    font-size: 12pt; /* Larger size for the arrow symbol */
+    font-weight: bold;
+}
+
+QPushButton:hover {
+    background-color: #0056b3; /* Darker blue on hover */
+    border-color: #004494;
+}
+
+QPushButton:pressed {
+    background-color: #004494; /* Even darker blue when pressed */
+    border-style: inset; /* Simulates a push down effect */
+    padding: 7px 11px 5px 13px; /* Shifts content slightly */
+}
+
+QPushButton:disabled {
+    background-color: #80a0c0;
+    color: #cccccc;
+    border-color: #6080a0;
+}</string>
+       </property>
+       <property name="text">
+        <string>Fwd</string>
+       </property>
+      </widget>
+      <widget class="QSlider" name="horizontalSlider_velo">
+       <property name="geometry">
+        <rect>
+         <x>210</x>
+         <y>320</y>
+         <width>221</width>
+         <height>71</height>
+        </rect>
+       </property>
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+      </widget>
+      <widget class="QLabel" name="Speed_Label">
+       <property name="geometry">
+        <rect>
+         <x>300</x>
+         <y>320</y>
+         <width>57</width>
+         <height>15</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>Speed</string>
+       </property>
+      </widget>
+     </widget>
+     <widget class="QPushButton" name="pushButton_Stop">
+      <property name="geometry">
+       <rect>
+        <x>690</x>
+        <y>320</y>
+        <width>80</width>
+        <height>80</height>
+       </rect>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">QPushButton {
+    border-radius: 50px;
+    background-color: #ff0000;
+    color: white;
+    border: 5px solid #a30000;
+    font-size: 12px;
+    font-weight: bold;
+}
+/* Selectors for :hover and :pressed are necessary but secondary */
+QPushButton:hover {
+    background-color: #e60000; 
+}
+QPushButton:pressed {
+    background-color: #8c0000;
+    border: 3px solid #660000;
+    padding-top: 5px; 
+    padding-left: 5px;
+}</string>
+      </property>
+      <property name="text">
+       <string>Emergency</string>
+      </property>
+     </widget>
+     <widget class="QFrame" name="frame_2">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>430</y>
+        <width>651</width>
+        <height>341</height>
+       </rect>
+      </property>
+      <property name="frameShape">
+       <enum>QFrame::StyledPanel</enum>
+      </property>
+      <property name="frameShadow">
+       <enum>QFrame::Raised</enum>
+      </property>
+      <widget class="QLabel" name="manual_control_3">
+       <property name="geometry">
+        <rect>
+         <x>20</x>
+         <y>10</y>
+         <width>211</width>
+         <height>41</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:18pt; font-weight:700;&quot;&gt;Nav2 Control&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+       </property>
+      </widget>
+      <widget class="QPushButton" name="pushButton_stop_nav2">
+       <property name="geometry">
+        <rect>
+         <x>330</x>
+         <y>240</y>
+         <width>221</width>
+         <height>71</height>
+        </rect>
+       </property>
+       <property name="styleSheet">
+        <string notr="true">QPushButton {
+    /* Base Appearance */
+    background-color: #cccccc; /* Changed to Light Grey */
+    color: #333333; /* Changed text color to dark grey for contrast */
+    border: 1px solid #999999; /* Darker border for definition */
+    border-radius: 4px; 
+    padding: 6px 12px; 
+    
+    /* Font and Symbol Styling */
+    font-family: Arial, sans-serif; 
+    font-size: 12pt; 
+    font-weight: bold;
+}</string>
+       </property>
+       <property name="text">
+        <string>Stop Nav2 Viz</string>
+       </property>
+      </widget>
+      <widget class="QPushButton" name="pushButton_start_nav2">
+       <property name="geometry">
+        <rect>
+         <x>100</x>
+         <y>240</y>
+         <width>221</width>
+         <height>71</height>
+        </rect>
+       </property>
+       <property name="styleSheet">
+        <string notr="true">QPushButton {
+    /* Base Appearance */
+    background-color: #cccccc; /* Changed to Light Grey */
+    color: #333333; /* Changed text color to dark grey for contrast */
+    border: 1px solid #999999; /* Darker border for definition */
+    border-radius: 4px; 
+    padding: 6px 12px; 
+    
+    /* Font and Symbol Styling */
+    font-family: Arial, sans-serif; 
+    font-size: 12pt; 
+    font-weight: bold;
+}</string>
+       </property>
+       <property name="text">
+        <string>Start Nav2 Viz</string>
+       </property>
+      </widget>
+      <widget class="QLabel" name="labelownRobi_2">
+       <property name="geometry">
+        <rect>
+         <x>20</x>
+         <y>70</y>
+         <width>181</width>
+         <height>16</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>Mode Selection</string>
+       </property>
+      </widget>
+      <widget class="QComboBox" name="comboBox_mode_select">
+       <property name="geometry">
+        <rect>
+         <x>20</x>
+         <y>90</y>
+         <width>191</width>
+         <height>61</height>
+        </rect>
+       </property>
+      </widget>
+     </widget>
+     <widget class="QLabel" name="label_battery">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>790</y>
+        <width>111</width>
+        <height>41</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>SOC:</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>780</y>
+        <width>71</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Akku in %</string>
+      </property>
+     </widget>
+    </widget>
+   </widget>
+  </widget>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>884</width>
+     <height>20</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

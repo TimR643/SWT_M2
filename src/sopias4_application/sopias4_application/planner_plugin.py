@@ -14,11 +14,10 @@ from sopias4_framework.tools.ros2.costmap_tools import LETHAL_COST
 from sopias4_msgs.msg import RobotStates
 
 
-# WICHTIG: Die Klasse muss PlannerPlugin heißen, damit die GUI sie findet!
+# Class name must be PlannerPlugin so the GUI can load it.
 class PlannerPlugin(PlannerPyPlugin):
 
     def __init__(self, namespace: str | None = None) -> None:
-        # Konstruktor Aufruf korrigiert und vereinfacht
         if namespace is None:
             super().__init__(node_name="planner_astar", plugin_name="astar")
             self.ns_prefix = ""
@@ -33,16 +32,10 @@ class PlannerPlugin(PlannerPyPlugin):
         self.get_logger().set_level(rclpy.logging.LoggingSeverity.INFO)
         print("PLANNER UP")
 
-        # --- Service Client zum Löschen der Lokalen Costmap ---
-        # Dies ist notwendig, damit der Controller durch dynamische Hindernisse fährt
         service_name = f"{self.ns_prefix}/local_costmap/clear_entirely_local_costmap"
         self.clear_costmap_client = self.create_client(ClearEntireCostmap, service_name)
 
-        # --- Parameter Initialisierung ---
-        # Wir definieren die Attribute direkt hier, keine Klassen-Annotationen (vermeidet AttributeErrors)
-        self.schnitzeljagd_mode = self.declare_parameter(
-            "schnitzeljagd_mode", False
-        ).value
+        self.schnitzeljagd_mode = True
         self.collision_penalty_seconds = self.declare_parameter(
             "collision_penalty_seconds", 5.0
         ).value
@@ -52,16 +45,9 @@ class PlannerPlugin(PlannerPyPlugin):
         self.replan_overhead_seconds = self.declare_parameter(
             "replan_overhead_seconds", 0.5
         ).value
-        self.detour_threshold_factor = (
-            1.1  # Ab wann gilt ein Weg als Umweg? (1.1 = 10% länger)
-        )
+        self.detour_threshold_factor = 1.1
 
         self.opponent_robot_namespace = None
-
-        # Subscriber für Gegner-Erkennung
-        self.create_subscription(
-            RobotStates, "/robot_states", self.robot_states_callback, 10
-        )
 
     def generate_path(
         self,
@@ -71,70 +57,32 @@ class PlannerPlugin(PlannerPyPlugin):
         goal_tolerance: float = 0.2,
     ) -> List[Tuple[int, int]]:
 
-        # 1. Berechne Standard A* (Sicherer Weg)
         safe_path = self._run_astar(start, goal, costmap, goal_tolerance)
 
-        # Wenn Schnitzeljagd aus ist, einfach den sicheren Weg nehmen
         if not self.schnitzeljagd_mode:
             return safe_path if safe_path else []
 
-        # -------------------------------------------------------------
-        # 2. Lazy Evaluation: Müssen wir überhaupt "durchbrechen"?
-        # -------------------------------------------------------------
-
-        # Luftlinien-Distanz (Meter)
         euclidean_dist = (
             costmap_tools.euclidian_distance_map_domain(start, goal, costmap)
             * costmap.getResolution()
         )
 
-        # Wenn wir einen Pfad haben, prüfen wir, ob es ein großer Umweg ist
         if safe_path:
             safe_dist = self.calculate_path_length(safe_path, costmap)
-            # Wenn der Weg nur < 10% länger als Luftlinie ist -> Fahr ihn, kein Hindernis.
             if safe_dist <= (euclidean_dist * self.detour_threshold_factor):
                 return safe_path
 
             self.get_logger().info(
-                f"Umweg erkannt! (A*: {safe_dist:.2f}m vs Luftlinie: {euclidean_dist:.2f}m)"
+                f"Detour detected (A*: {safe_dist:.2f}m vs straight: {euclidean_dist:.2f}m)."
             )
         else:
-            self.get_logger().warn("A* blockiert! Prüfe Durchbruch...")
+            self.get_logger().warn("A* blocked; falling back to safe path.")
 
-        # -------------------------------------------------------------
-        # 3. Entscheidung: Durchfahren oder Umfahren?
-        # -------------------------------------------------------------
-
-        # Direkten Weg simulieren
-        direct_path = self.build_direct_path(start, goal)
-
-        # Wenn direkter Weg frei ist (z.B. A* Bug), nimm ihn einfach
-        if not self.is_path_blocked(direct_path, costmap):
-            return direct_path
-
-        # Zeitvergleich
-        time_safe = 2  # (self.calculate_path_length(safe_path, costmap) / self.average_speed) if safe_path else float('inf')
-        time_direct_penalty = 1  # (self.calculate_path_length(direct_path, costmap) / self.average_speed) + self.collision_penalty_seconds
-
-        self.get_logger().info(
-            f"Vergleich: Umweg {time_safe:.1f}s vs. Durchbruch {time_direct_penalty:.1f}s"
-        )
-
-        if time_direct_penalty < time_safe:
-            self.get_logger().warn(
-                ">> ENTSCHEIDUNG: Durchfahren ist schneller! Lösche Costmap."
-            )
-            # Controller blind machen für Hindernis
-            self.trigger_costmap_clear()
-            return direct_path
-        else:
-            self.get_logger().info(">> ENTSCHEIDUNG: Umweg ist besser.")
-            return safe_path if safe_path else []
-
-    # --- Hilfsfunktionen ---
+        self.get_logger().info("Schnitzeljagd: using safe path only.")
+        return safe_path if safe_path else []
 
     def trigger_costmap_clear(self):
-        """Löscht die lokale Costmap, damit der Controller durch das Hindernis fährt."""
+        """Clear local costmap to ignore obstacles (not used in safe mode)."""
         if self.clear_costmap_client.service_is_ready():
             req = ClearEntireCostmap.Request()
             self.clear_costmap_client.call_async(req)
@@ -174,7 +122,6 @@ class PlannerPlugin(PlannerPyPlugin):
         return path
 
     def _run_astar(self, start, goal, costmap, goal_tolerance):
-        """Standard A* Implementierung"""
         dist_to_goal = costmap_tools.euclidian_distance_map_domain(start, goal, costmap)
         if dist_to_goal <= goal_tolerance:
             return [start, goal]
@@ -235,22 +182,7 @@ class PlannerPlugin(PlannerPyPlugin):
         return path
 
     def robot_states_callback(self, msg: RobotStates) -> None:
-        """Aktiviert Schnitzeljagd-Modus, wenn Turtlebot 3 der Gegner ist."""
-        own_namespace = self.get_namespace()
-        for robot in msg.robot_states:
-            if robot.name_space == own_namespace:
-                continue
-
-            self.opponent_robot_namespace = robot.name_space
-            opponent_suffix = robot.name_space.rstrip("/").split("/")[-1]
-
-            if opponent_suffix in ("3", "robot3"):
-                if not self.schnitzeljagd_mode:
-                    self.get_logger().info(
-                        "Gegner Robot 3 erkannt -> AKTIVIERE Schnitzeljagd Modus!"
-                    )
-                self.schnitzeljagd_mode = True
-            return
+        pass
 
 
 def main(args=None):
