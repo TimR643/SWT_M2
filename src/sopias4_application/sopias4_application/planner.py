@@ -9,13 +9,12 @@ import rclpy
 from geometry_msgs.msg import PoseStamped
 from nav2_simple_commander.costmap_2d import PyCostmap2D
 from nav_msgs.msg import Path
-from rclpy.node import Node
-from rclpy.service import Service
 from sopias4_framework.nodes.planner_pyplugin import *
 from sopias4_framework.nodes.planner_pyplugin import PlannerPyPlugin
 from sopias4_framework.tools.ros2 import costmap_tools
 from sopias4_framework.tools.ros2.costmap_tools import LETHAL_COST
 
+from sopias4_msgs.msg import RobotStates
 from sopias4_msgs.srv import CreatePlan
 
 
@@ -23,6 +22,11 @@ class Astar(PlannerPyPlugin):
     goal_tolerance: float = 0.2
     caching_tolerance: float = 0.4
     cached_path: list[Tuple[int, int]]
+    schnitzeljagd_mode: bool
+    collision_penalty_seconds: float
+    schnitzeljagd_average_speed: float
+    replan_overhead_seconds: float
+    opponent_robot_namespace: str | None
 
     def __init__(self, namespace: str | None = None) -> None:
         (
@@ -40,6 +44,23 @@ class Astar(PlannerPyPlugin):
         self.get_logger().info("Started node")
         self.get_logger().set_level(30)
         print("PLANNER UP")
+
+        self.schnitzeljagd_mode = self.declare_parameter(
+            "schnitzeljagd_mode", False
+        ).value
+        self.collision_penalty_seconds = self.declare_parameter(
+            "collision_penalty_seconds", 5.0
+        ).value
+        self.schnitzeljagd_average_speed = self.declare_parameter(
+            "schnitzeljagd_average_speed", 0.35
+        ).value
+        self.replan_overhead_seconds = self.declare_parameter(
+            "replan_overhead_seconds", 0.5
+        ).value
+        self.opponent_robot_namespace = None
+        self.create_subscription(
+            RobotStates, "/robot_states", self.robot_states_callback, 10
+        )
 
     def generate_path(
         self,
@@ -86,7 +107,14 @@ class Astar(PlannerPyPlugin):
                 costmap_tools.euclidian_distance_map_domain(current, goal, costmap)
                 <= goal_tolerance
             ):
-                return self.reconstruct_path(came_from, current)  # Trace back the path
+                path = self.reconstruct_path(came_from, current)
+                if self.schnitzeljagd_mode:
+                    schnitzeljagd_path = self.evaluate_schnitzeljagd_strategy(
+                        start=start, goal=goal, safe_path=path, costmap=costmap
+                    )
+                    if schnitzeljagd_path is not None:
+                        return schnitzeljagd_path
+                return path  # Trace back the path
 
             for dx, dy in neighbors_8:
                 nx, ny = current[0] + dx, current[1] + dy  # Neighbor coordinates
@@ -113,6 +141,11 @@ class Astar(PlannerPyPlugin):
                     )  # Add neighbor to queue
 
         self.get_logger().warn("No valid path found by A*.")
+        if self.schnitzeljagd_mode:
+            self.get_logger().warn(
+                "Falling back to direct penalty path because no valid path was found"
+            )
+            return self.build_direct_path(start, goal)
         return []  # No path found
 
     """Only for test purposes"""
@@ -146,6 +179,104 @@ class Astar(PlannerPyPlugin):
             path.append(current)
         path.reverse()  # Reverse the path to go from start to goal
         return path
+
+    def evaluate_schnitzeljagd_strategy(
+        self,
+        start: tuple[int, int],
+        goal: tuple[int, int],
+        safe_path: list[tuple[int, int]],
+        costmap: PyCostmap2D,
+    ) -> list[tuple[int, int]] | None:
+        """
+        Decide whether to follow the safe path or take a direct route and accept
+        a collision penalty.
+
+        Args:
+            start: Start coordinate in costmap domain.
+            goal: Goal coordinate in costmap domain.
+            safe_path: Path that avoids lethal obstacles.
+            costmap: Current costmap used for estimations.
+
+        Returns:
+            The chosen path if the penalty option is faster, otherwise ``None`` to
+            indicate that the safe path should be used.
+        """
+
+        direct_path = self.build_direct_path(start, goal)
+
+        safe_time = self.estimate_travel_time_seconds(safe_path, costmap)
+        direct_time = self.estimate_travel_time_seconds(direct_path, costmap)
+
+        adjusted_safe_time = safe_time + self.replan_overhead_seconds
+        penalty_time = direct_time + self.collision_penalty_seconds
+
+        if penalty_time < adjusted_safe_time:
+            self.get_logger().info(
+                "Schnitzeljagd mode: Choosing direct path with penalty because it is faster"
+            )
+            return direct_path
+
+        self.get_logger().debug(
+            "Schnitzeljagd mode: Using safe path because penalty shortcut is slower"
+        )
+        return None
+
+    def estimate_travel_time_seconds(
+        self, path: list[tuple[int, int]], costmap: PyCostmap2D
+    ) -> float:
+        """
+        Estimate travel time for a path based on average speed and map resolution.
+        """
+        if len(path) < 2 or self.schnitzeljagd_average_speed <= 0:
+            return 0.0
+
+        distance_m = 0.0
+        for previous, current in zip(path[:-1], path[1:]):
+            distance_m += costmap_tools.euclidian_distance_pixel_domain(
+                previous, current, costmap
+            ) * costmap.getResolution()
+
+        return distance_m / self.schnitzeljagd_average_speed
+
+    def build_direct_path(
+        self, start: tuple[int, int], goal: tuple[int, int]
+    ) -> list[tuple[int, int]]:
+        """Generate a straight-line path between two points in costmap space."""
+        path: list[tuple[int, int]] = [start]
+        dx = goal[0] - start[0]
+        dy = goal[1] - start[1]
+        steps = max(abs(dx), abs(dy))
+
+        if steps == 0:
+            return path
+
+        for step in range(1, steps):
+            x = round(start[0] + (dx * step) / steps)
+            y = round(start[1] + (dy * step) / steps)
+            if (x, y) != path[-1]:
+                path.append((x, y))
+
+        path.append(goal)
+        return path
+
+    def robot_states_callback(self, msg: RobotStates) -> None:
+        """Enable Schnitzeljagd mode automatically when robot 3 is the opponent."""
+
+        own_namespace = self.get_namespace()
+        for robot in msg.robot_states:
+            if robot.name_space == own_namespace:
+                continue
+
+            self.opponent_robot_namespace = robot.name_space
+            opponent_suffix = robot.name_space.rstrip("/").split("/")[-1]
+
+            if opponent_suffix in ("3", "robot3"):
+                if not self.schnitzeljagd_mode:
+                    self.get_logger().info(
+                        "Enabling Schnitzeljagd mode because opponent robot 3 was detected"
+                    )
+                self.schnitzeljagd_mode = True
+            return
 
 
 def main(args=None):
